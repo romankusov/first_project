@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @Entity
-@Table(name = "pages")
+@Table(name = "pages", indexes = {@Index(name = "path_index", columnList = "path" )})
 public class PageEntity {
 
     @Id
@@ -20,7 +20,7 @@ public class PageEntity {
     @JoinColumn(name = "site_id", nullable = false)
     private SiteEntity siteEntity;
 
-    @Column(columnDefinition = "TEXT NOT NULL, Index (path(512))")
+    @Column(columnDefinition = "varchar(200) NOT NULL")
     private String path;
 
     private int code;
@@ -35,11 +35,6 @@ public class PageEntity {
         this.content = content;
     }
 
-    public PageEntity(String path, int code, String content) {
-        this.path = path;
-        this.code = code;
-        this.content = content;
-    }
 
     public PageEntity(SiteEntity siteEntity, String path) {
         this.siteEntity = siteEntity;

@@ -1,4 +1,4 @@
-package searchengine.services;
+package searchengine.services.indexing;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,31 +15,37 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @AllArgsConstructor
-public class PageParser extends RecursiveTask<Set<String>> {
+public class PageParser extends RecursiveTask <LemmasAndIndexesEntMaker> {
     private final String url;
     private final SiteEntity site;
     private final PageRepository pageRepository;
     private final Set<String> uniqueLinksSet;
     private SiteRepository siteRepository;
+    private LemmasAndIndexesEntMaker lemmasAndIndexesEntMaker;
 
     @Override
-    protected Set<String> compute()
+    protected LemmasAndIndexesEntMaker compute()
     {
-        if (SiteParser.isStop())
-        {
-            return new HashSet<>();
-        }
         uniqueLinksSet.add(url);
         try {
             List<PageParser> tasklist = new ArrayList<>();
+            if (SiteParser.isStop())
+            {
+                tasklist.clear();
+                return new LemmasAndIndexesEntMaker();
+            }
             Connection.Response jsoupResponse = JsoupWorks.getJsoupResponse(url);
             Document document = jsoupResponse.parse();
+
             Set <String> setOfLinks = new HashSet<>();
             if (Objects.requireNonNull(jsoupResponse.contentType()).startsWith("text"))
             {
-                PageEntity page = makePageForDB(jsoupResponse, document);
-                pageRepository.save(page);
-                setOfLinks = getLinksFromPage(document);
+                PageEntity page = pageRepository.saveAndFlush(makePageForDB(jsoupResponse, document));
+                if (page.getCode() == 200)
+                {
+                    lemmasAndIndexesEntMaker.addLeAndIeToTempCollection(page);
+                    setOfLinks = getLinksFromPage(document);
+                }
             }
             if (setOfLinks.size() > 0)
             {
@@ -47,32 +53,39 @@ public class PageParser extends RecursiveTask<Set<String>> {
                 for (String link: setOfLinks)
                 {
                     Thread.sleep(200);
-                    PageParser task = new PageParser(link, site, pageRepository, uniqueLinksSet, siteRepository);
+
+                    PageParser task = new PageParser(link, site, pageRepository,
+                            uniqueLinksSet, siteRepository, lemmasAndIndexesEntMaker);
                     task.fork();
                     tasklist.add(task);
                 }
+
             }
             tasklist.forEach(ForkJoinTask::join);
-        } catch (InterruptedException | IOException e)
+        } catch (IOException e)
         {
             e.printStackTrace();
             String errorMsg = e.getLocalizedMessage() + " on page: " + url;
             siteRepository.update(site, errorMsg);
+        } catch (Exception e) {
+            String errorMsg = e.getLocalizedMessage() + " on page: " + url;
+            siteRepository.update(site, errorMsg);
+            e.printStackTrace();
         }
-        return uniqueLinksSet;
+        return lemmasAndIndexesEntMaker;
     }
 
-    public boolean isPropperLink(String url)
+    private boolean isPropperLink(String url)
     {
         return  url.startsWith(site.getUrl()) &&
                 !url.contains("?") &&
                 !url.contains("#") &&
-                !url.endsWith("jpeg") &&
-                !url.endsWith("jpg") &&
-                !url.endsWith("pdf") &&
-                !url.endsWith("mp3");
+                !url.endsWith("jpeg/") &&
+                !url.endsWith("jpg/") &&
+                !url.endsWith("pdf/") &&
+                !url.endsWith("mp3/");
     }
-    public String linkFormat(String link)
+    private String linkFormat(String link)
     {
         String formatedLink = link;
         if (!link.endsWith("/"))
@@ -82,18 +95,15 @@ public class PageParser extends RecursiveTask<Set<String>> {
         return formatedLink;
     }
 
-    private PageEntity makePageForDB(Connection.Response jsoupResponse, Document document )
-    {
+    private PageEntity makePageForDB(Connection.Response jsoupResponse, Document document) throws IOException {
         String path = url.substring(site.getUrl().length() - 1);
-        try
+        int code = jsoupResponse.statusCode();
+        if (code != 200)
         {
-            int code = jsoupResponse.statusCode();
-            String content = document.html();
-            return new PageEntity(site, path, code, content);
-        } catch (Exception ex) {
-            log.error(ex.getLocalizedMessage());
-            return new PageEntity(site, path);
+            return new PageEntity(site, path, code, "");
         }
+        String content = document.html();
+        return new PageEntity(site, path, code, content);
     }
 
     private Set<String> getLinksFromPage(Document document) throws IOException

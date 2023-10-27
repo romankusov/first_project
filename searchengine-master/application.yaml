@@ -1,15 +1,19 @@
 indexing-settings:
   sites:
-#    - url: https://metanit.com/
-#      name: Metanit
-#    - url: https://volochek.life/
-#      name: Volochek
-    - url: https://www.lenta.ru/
-      name: Lenta.ru
-    - url: https://playback.ru/
-      name: Playback.ru
-    - url: https://skillbox.ru/
-      name: Skillbox.ru
+#    - url: https://sergeybezrukov.ru/
+#      name: Bezrukov
+    - url: https://metanit.com/
+      name: Metanit
+#    - url: https://thepike.ru/
+#      name: ThePike
+    - url: https://volochek.life/
+      name: Volochek
+#    - url: https://www.lenta.ru/
+#      name: Lenta.ru
+#    - url: https://playback.ru/
+#      name: Playback.ru
+#    - url: https://skillbox.ru/
+#      name: Skillbox.ru
 server:
   port: 8080
 spring:
@@ -24,7 +28,7 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         order_inserts: true
         jdbc:
-          batch_size: 500
+          batch_size: 50000
 
     hibernate:
       ddl-auto: update
@@ -32,3 +36,8 @@ spring:
 logging:
   level:
     org.springframework.web: DEBUG
+    org.hibernate:
+      SQL: ERROR
+#      orm.jdbc.bind: TRACE
+  file: hibernate.log
+

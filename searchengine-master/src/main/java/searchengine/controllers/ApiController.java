@@ -1,13 +1,11 @@
 package searchengine.controllers;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import searchengine.dto.indexing.IndexingResponse;
 import searchengine.dto.statistics.StatisticsResponse;
-import searchengine.services.IndexingService;
-import searchengine.services.StatisticsService;
+import searchengine.services.indexing.IndexingService;
+import searchengine.services.statistics.StatisticsService;
 
 @RestController
 @RequestMapping("/api")
@@ -35,8 +33,14 @@ public class ApiController {
     }
 
     @GetMapping("/stopIndexing")
-    public ResponseEntity<IndexingResponse> stopIndexing() throws InterruptedException {
+    public ResponseEntity<IndexingResponse> stopIndexing() throws InterruptedException
+    {
         return ResponseEntity.ok(indexingService.stopIndexing());
+    }
+
+    @PostMapping("/indexPage")
+    public ResponseEntity<IndexingResponse> indexPage(@RequestParam String url) throws Exception {
+        return ResponseEntity.ok(indexingService.indexPage(url));
     }
 
 }
