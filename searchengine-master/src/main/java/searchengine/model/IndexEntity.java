@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.Objects;
 
+import static jakarta.persistence.ConstraintMode.CONSTRAINT;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -18,11 +20,13 @@ public class IndexEntity {
     private int id;
 
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
-    @JoinColumn(name = "page_id", nullable = false)
+    @JoinColumn(name = "page_id", foreignKey = @ForeignKey(value = CONSTRAINT,
+            foreignKeyDefinition = "FOREIGN KEY (page_id) REFERENCES pages (id) ON DELETE CASCADE ON UPDATE CASCADE"), nullable = false)
     private PageEntity pageEntity;
 
-    @ManyToOne
-    @JoinColumn(name = "lemma_id", nullable = false)
+    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @JoinColumn(name = "lemma_id", foreignKey = @ForeignKey(value = CONSTRAINT,
+            foreignKeyDefinition = "FOREIGN KEY (lemma_id) REFERENCES lemmas (id) ON DELETE CASCADE ON UPDATE CASCADE"), nullable = false)
     private LemmaEntity lemmaEntity;
 
     @Column(name = "ranking", nullable = false)

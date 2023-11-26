@@ -77,14 +77,11 @@ public class SiteParser implements Runnable {
             {
                 indexRepository.saveAllAndFlush(indexEntities);
             }
+            lemmasAndIndexesEntMaker.clear();
 
-
-            System.out.println(site.getName() + "LemmaSet size= " + LemmasAndIndexesEntMaker.getLemmasCount());
-            System.out.println(site.getName() + "IndexE set size = " + LemmasAndIndexesEntMaker.getIndexCount());
             uniqueLinksSet.clear();
 
             siteRepository.update(insertedSE, IndexStatus.INDEXED);
-            System.out.println("Site " + insertedSE.getName() + "Indexed");
         } catch (Exception ex)
         {
             siteRepository.update(insertedSE, IndexStatus.FAILED, ex.getLocalizedMessage());

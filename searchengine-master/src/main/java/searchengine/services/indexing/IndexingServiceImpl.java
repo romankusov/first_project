@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -33,7 +32,6 @@ public class IndexingServiceImpl implements IndexingService {
 
     @Autowired
     private volatile IndexRepository indexRepository;
-
 
     private final SitesList sitesList;
     private final List <Thread> tasks = new ArrayList<>();
@@ -75,10 +73,6 @@ public class IndexingServiceImpl implements IndexingService {
         {
             SiteParser.setStop(true);
             tasks.forEach(Thread::interrupt);
-//            String errorMsg = "Индексация остановлена пользователем";
-//            siteRepository.findAll().stream().filter(s -> !(s.getStatus() == IndexStatus.INDEXED))
-//                    .forEach(s -> siteRepository.update(s, IndexStatus.FAILED, errorMsg));
-
             tasks.clear();
             response.setResult(true);
         }
@@ -113,24 +107,28 @@ public class IndexingServiceImpl implements IndexingService {
             }
             SiteEntity siteEntity = siteRepository.findByName(site.getName()).get();
             PageEntity page = JsoupWorks.makeOnePageForDB(siteEntity, url);
-            if (pageRepository.findByPathAndSiteEntityName(page.getPath(), siteEntity.getName()).isPresent())
+            if (pageRepository.findByPathAndSiteEntityUrl(page.getPath(), siteEntity.getUrl()).isPresent())
             {
-                PageEntity pageForDelete = pageRepository.findByPathAndSiteEntityName(page.getPath(),
-                        siteEntity.getName()).get();
-                lemmaRepository.decreaseFrequencyLemma(pageForDelete);
+                PageEntity pageForDelete = pageRepository.findByPathAndSiteEntityUrl(page.getPath(),
+                        siteEntity.getUrl()).get();
+                System.out.println("page id " + pageForDelete.getId());
+                List<LemmaEntity> lemmasByPageForDecrease = indexRepository.getLemmasByPage(pageForDelete);
+                System.out.println("lemmas ids for delete size: " + lemmasByPageForDecrease.size());
                 indexRepository.deleteByPageEntity(pageForDelete);
+                lemmaRepository.decreaseFrequencyLemmaAndGetZeroFr(lemmasByPageForDecrease);
+                System.out.println("lemma repo after decrease " + lemmaRepository.findAll().size());
                 pageRepository.delete(pageForDelete);
             }
-            pageRepository.save(page);
+            page = pageRepository.save(page);
             Map<LemmaEntity, Integer> lemmaEntityAndRankMap = new ConcurrentHashMap<>();
             ConcurrentLinkedQueue<IndexEntity> indexEntities = new ConcurrentLinkedQueue<>();
             LemmasAndIndexesEntMaker lemmasAndIndexesEntMaker =
                     new LemmasAndIndexesEntMaker(lemmaEntityAndRankMap, indexEntities);
             lemmasAndIndexesEntMaker.addLeAndIeToTempCollection(page);
             List<LemmaEntity> lemmaEntityListForSave = lemmasAndIndexesEntMaker.getLemmasListForSave();
-            lemmaEntityListForSave = lemmaRepository.saveAllAndFlush(lemmaEntityListForSave);
-            indexEntities = lemmasAndIndexesEntMaker.getIndexEntityQueueForSave(lemmaEntityListForSave);
-            indexRepository.saveAllAndFlush(indexEntities);
+            List<LemmaEntity> lemmaEntityListForIndex = lemmaRepository.upsertLemmas(siteEntity, lemmaEntityListForSave);
+            indexEntities = lemmasAndIndexesEntMaker.getIndexEntityQueueForSave(lemmaEntityListForIndex);
+            indexRepository.saveAll(indexEntities);
             response.setResult(true);
             response.setError("");
         }
@@ -153,4 +151,5 @@ public class IndexingServiceImpl implements IndexingService {
         pageRepository.deleteAllInBatch();
         siteRepository.deleteAllInBatch();
     }
+
 }

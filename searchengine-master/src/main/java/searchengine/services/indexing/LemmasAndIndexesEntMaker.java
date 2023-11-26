@@ -9,7 +9,6 @@ import searchengine.model.SiteEntity;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @NoArgsConstructor
 public class LemmasAndIndexesEntMaker {
@@ -24,10 +23,6 @@ public class LemmasAndIndexesEntMaker {
         }
     }
 
-    private static AtomicInteger lemmasCount = new AtomicInteger(0);
-
-    private static AtomicInteger indexCount = new AtomicInteger(0);
-
     private Map<LemmaEntity, Integer> lemmaMapForDB;
     private ConcurrentLinkedQueue<IndexEntity> indexEntityQueue;
 
@@ -36,13 +31,7 @@ public class LemmasAndIndexesEntMaker {
         this.lemmaMapForDB = lemmaMapForDB;
         this.indexEntityQueue = indexEntityQueue;
     }
-    public static AtomicInteger getLemmasCount() {
-        return lemmasCount;
-    }
 
-    public static AtomicInteger getIndexCount() {
-        return indexCount;
-    }
 
     public void addLeAndIeToTempCollection(PageEntity page) throws Exception
     {
@@ -53,10 +42,8 @@ public class LemmasAndIndexesEntMaker {
         {
             LemmaEntity lemmaEntity = new LemmaEntity(siteEntity, strLemma);
             putNewLemmas(lemmaEntity);
-            lemmasCount.incrementAndGet();//
             Integer rank = lemmasAndRankFromPage.get(strLemma);
             indexEntityQueue.add(new IndexEntity(page, lemmaEntity, rank));
-            indexCount.incrementAndGet();
         }
     }
 
@@ -89,6 +76,12 @@ public class LemmasAndIndexesEntMaker {
         return indexEntityQueue;
     }
 
+    public void clear()
+    {
+        indexEntityQueue.clear();
+        lemmaMapForDB.clear();
+    }
+
 
     private Map<String, Integer> getLemmasAndRankFromPage(PageEntity page) throws Exception
     {
@@ -99,10 +92,6 @@ public class LemmasAndIndexesEntMaker {
     private void putNewLemmas(LemmaEntity lemmaEntity)
     {
         int frequency = lemmaMapForDB.getOrDefault(lemmaEntity, 0) + 1;
-        if (frequency > 1)
-        {
-            lemmasCount.decrementAndGet();
-        }
         lemmaMapForDB.put(lemmaEntity, frequency);
     }
 

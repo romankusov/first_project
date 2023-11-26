@@ -32,16 +32,16 @@ public class LemmaEntity {
         this.lemma = lemma;
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof LemmaEntity that)) return false;
-        return siteEntity.equals(that.siteEntity) && lemma.equals(that.lemma);
+        return siteEntity.getUrl().equals(that.siteEntity.getUrl()) && lemma.equals(that.lemma);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(siteEntity, lemma);
     }
+
 }
