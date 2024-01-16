@@ -24,13 +24,13 @@ public class LemmasFinder {
         this.luceneMorph = luceneMorph;
     }
 
-    public Map<String, Integer> getLemmaMap(String text) throws Exception {
+    public LinkedHashMap<String, Integer> getLemmaMap(String text) throws Exception {//Linked?
         List<String> russianPropperWordsList = russianPropperWordsList(text);
         if(russianPropperWordsList.isEmpty())
         {
             throw new Exception("На странице отсутствуют русские слова");
         }
-        Map<String, Integer> lemmaMap = new HashMap<>();
+        LinkedHashMap<String, Integer> lemmaMap = new LinkedHashMap<>();
         for (String word : russianPropperWordsList)
         {
             if(!luceneMorph.checkString(word))
@@ -43,15 +43,22 @@ public class LemmasFinder {
         return lemmaMap;
     }
 
-    private List<String> russianPropperWordsList(String text)
+    public List<String> russianPropperWordsList(String text)
     {
-        String[] textArray = text.toLowerCase(Locale.ROOT)
-                .trim()
-                .split("\\b");
+        List<String> stringListFromText = getStringListFromText(text);
 
-        return Arrays.stream(textArray)
-                .filter(s -> s.matches(REG_EXP_RUSSIAN_WORD))
-                .filter(this::isPropperWord).collect(Collectors.toList());
+        return stringListFromText.stream().filter(this::isPropperWord).collect(Collectors.toList());
+    }
+
+    public List<String> getStringListFromText(String text)
+    {
+        return Arrays.stream(text.toLowerCase(Locale.ROOT).trim().split("\\b"))
+                .filter(s -> s.matches(REG_EXP_RUSSIAN_WORD)).toList();
+    }
+
+    public String getLemma(String word)
+    {
+        return luceneMorph.getNormalForms(word).get(0);
     }
 
     private boolean isPropperWord(String word)

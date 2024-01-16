@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 public interface LemmaRepository extends JpaRepository<LemmaEntity, Integer> {
 
     List<LemmaEntity> findBySiteEntity(SiteEntity siteEntity);
+    List<LemmaEntity> findAllByLemma(String lemma);
+    LemmaEntity findByLemmaAndSiteEntity(String lemma, SiteEntity siteEntity);
 
     int countBySiteEntityName(String siteEntityName);
 
@@ -49,5 +51,9 @@ public interface LemmaRepository extends JpaRepository<LemmaEntity, Integer> {
         }
         return lemmaEntityListForIndex;
     }
+
+    @Query("SELECT AVG(l.frequency) FROM LemmaEntity l WHERE l.frequency > 1")
+    float getAvgFreq();
+
 
 }

@@ -37,7 +37,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         TotalStatistics total = new TotalStatistics();
         total.setSites(sites.getSites().size());
-        total.setIndexing(true);
+        //total.setIndexing(true);
         StatisticsResponse response = new StatisticsResponse();
         StatisticsData data = new StatisticsData();
 
@@ -50,9 +50,15 @@ public class StatisticsServiceImpl implements StatisticsService {
                 Site site = sitesList.get(i);
                 DetailedStatisticsItem item = new DetailedStatisticsItem();
                 String siteName = site.getName();
-                SiteEntity siteEntity = siteRepository.findByName(siteName).get();
+                String siteUrl = site.getUrl();
+                SiteEntity siteEntity = siteRepository.findByUrl(siteUrl).orElse(null);
+                if (siteEntity == null)
+                {
+                    total.setIndexing(false);
+                    break;
+                }
                 item.setName(siteName);
-                item.setUrl(site.getUrl());
+                item.setUrl(siteUrl);
                 int pages = pageRepository.countBySiteEntityName(siteName);
                 int lemmas = lemmaRepository.countBySiteEntityName(siteName);
                 item.setPages(pages);
@@ -63,6 +69,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                 total.setPages(total.getPages() + pages);
                 total.setLemmas(total.getLemmas() + lemmas);
                 detailed.add(item);
+
             }
             data.setTotal(total);
             data.setDetailed(detailed);
@@ -72,6 +79,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         {
             response.setResult(false);
             response.setError("Указанная страница не найдена");
+            ex.printStackTrace();
         }
 
         return response;

@@ -31,11 +31,13 @@ public class SiteParser implements Runnable {
         this.site = site;
     }
 
-    public static void setStop(boolean stop) {
+    public static void setStop(boolean stop)
+    {
         SiteParser.stop = stop;
     }
 
-    public static boolean isStop() {
+    public static boolean isStop()
+    {
         return stop;
     }
 
@@ -48,6 +50,7 @@ public class SiteParser implements Runnable {
         siteEntity.setStatus(IndexStatus.INDEXING);
         siteEntity.setStatusTime(LocalDateTime.now());
         SiteEntity insertedSE = siteRepository.save(siteEntity);
+
         try
         {
             String parsedLink = insertedSE.getUrl();
@@ -78,6 +81,7 @@ public class SiteParser implements Runnable {
                 indexRepository.saveAllAndFlush(indexEntities);
             }
             lemmasAndIndexesEntMaker.clear();
+            log.info("Indexing stopped");
 
             uniqueLinksSet.clear();
 

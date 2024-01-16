@@ -1,23 +1,26 @@
 package searchengine.model;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface SiteRepository extends JpaRepository<SiteEntity, Integer> {
 
-    Optional<SiteEntity> findByName(String name);
+    Optional<SiteEntity> findByUrl(String url);
+
+    List<SiteEntity> findAll();
+
 
     @Transactional
     default void update(SiteEntity siteEntity, IndexStatus status, String error)
     {
-        String name = siteEntity.getName();
-        SiteEntity sEforUpdate = findByName(name).get();
+        String url = siteEntity.getUrl();
+        SiteEntity sEforUpdate = findByUrl(url).get();
         sEforUpdate.setStatus(status);
         sEforUpdate.setLastError(error);
         sEforUpdate.setStatusTime(LocalDateTime.now());
@@ -27,8 +30,8 @@ public interface SiteRepository extends JpaRepository<SiteEntity, Integer> {
     @Transactional
     default void update(SiteEntity siteEntity, String error)
     {
-        String name = siteEntity.getName();
-        SiteEntity sEforUpdate = findByName(name).get();
+        String url = siteEntity.getUrl();
+        SiteEntity sEforUpdate = findByUrl(url).get();
         sEforUpdate.setLastError(error);
         sEforUpdate.setStatusTime(LocalDateTime.now());
         save(sEforUpdate);
@@ -37,8 +40,8 @@ public interface SiteRepository extends JpaRepository<SiteEntity, Integer> {
     @Transactional
     default void update(SiteEntity siteEntity, IndexStatus status)
     {
-        String name = siteEntity.getName();
-        SiteEntity sEforUpdate = findByName(name).get();
+        String url = siteEntity.getUrl();
+        SiteEntity sEforUpdate = findByUrl(url).get();
         sEforUpdate.setStatus(status);
         sEforUpdate.setStatusTime(LocalDateTime.now());
         save(sEforUpdate);

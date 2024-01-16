@@ -1,15 +1,15 @@
 indexing-settings:
   sites:
-#    - url: https://metanit.com/
-#      name: Metanit
-    - url: https://volochek.life/
-      name: Volochek
+    - url: https://metanit.com/
+      name: Metanit
+#    - url: https://sergeybezrukov.ru/
+#      name: Bezrukov
 #    - url: https://www.lenta.ru/
 #      name: Lenta.ru
-    - url: https://playback.ru/
+    - url: http://playback.ru/
       name: Playback.ru
-#    - url: https://skillbox.ru/
-#      name: Skillbox.ru
+#    - url: https://dimonvideo.ru/
+#      name: DimonVideo
 server:
   port: 8080
 spring:

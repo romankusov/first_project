@@ -82,7 +82,6 @@ public class LemmasAndIndexesEntMaker {
         lemmaMapForDB.clear();
     }
 
-
     private Map<String, Integer> getLemmasAndRankFromPage(PageEntity page) throws Exception
     {
         String text = page.getContent();
@@ -94,5 +93,4 @@ public class LemmasAndIndexesEntMaker {
         int frequency = lemmaMapForDB.getOrDefault(lemmaEntity, 0) + 1;
         lemmaMapForDB.put(lemmaEntity, frequency);
     }
-
 }

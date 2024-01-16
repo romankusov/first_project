@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +35,6 @@ public class IndexingServiceImpl implements IndexingService {
     private volatile IndexRepository indexRepository;
 
     private final SitesList sitesList;
-    private final List <Thread> tasks = new ArrayList<>();
 
     @Override
     public IndexingResponse startIndexing() throws InterruptedException
@@ -46,8 +46,9 @@ public class IndexingServiceImpl implements IndexingService {
             response.setError("Индексация уже запущена");
         } else
         {
-            tasks.clear();
+            List <Thread> tasks = new ArrayList<>();
             deleteAllEntities();
+            log.info("Indexing begins, entities after delete: " + siteRepository.findAll().size());
             SiteParser.setStop(false);
             for (Site site : sitesList.getSites())
             {
@@ -72,8 +73,6 @@ public class IndexingServiceImpl implements IndexingService {
         } else
         {
             SiteParser.setStop(true);
-            tasks.forEach(Thread::interrupt);
-            tasks.clear();
             response.setResult(true);
         }
         return response;
@@ -96,7 +95,7 @@ public class IndexingServiceImpl implements IndexingService {
         } else
         {
             Site site = siteUrlList.get(0);
-            if (siteRepository.findByName(site.getName()).isEmpty())
+            if (siteRepository.findByUrl(site.getUrl()).isEmpty())
             {
                 SiteEntity siteEntity = new SiteEntity();
                 siteEntity.setName(site.getName());
@@ -105,18 +104,15 @@ public class IndexingServiceImpl implements IndexingService {
                 siteEntity.setStatusTime(LocalDateTime.now());
                 siteRepository.save(siteEntity);
             }
-            SiteEntity siteEntity = siteRepository.findByName(site.getName()).get();
+            SiteEntity siteEntity = siteRepository.findByUrl(site.getUrl()).get();
             PageEntity page = JsoupWorks.makeOnePageForDB(siteEntity, url);
             if (pageRepository.findByPathAndSiteEntityUrl(page.getPath(), siteEntity.getUrl()).isPresent())
             {
                 PageEntity pageForDelete = pageRepository.findByPathAndSiteEntityUrl(page.getPath(),
                         siteEntity.getUrl()).get();
-                System.out.println("page id " + pageForDelete.getId());
                 List<LemmaEntity> lemmasByPageForDecrease = indexRepository.getLemmasByPage(pageForDelete);
-                System.out.println("lemmas ids for delete size: " + lemmasByPageForDecrease.size());
                 indexRepository.deleteByPageEntity(pageForDelete);
                 lemmaRepository.decreaseFrequencyLemmaAndGetZeroFr(lemmasByPageForDecrease);
-                System.out.println("lemma repo after decrease " + lemmaRepository.findAll().size());
                 pageRepository.delete(pageForDelete);
             }
             page = pageRepository.save(page);
@@ -151,5 +147,4 @@ public class IndexingServiceImpl implements IndexingService {
         pageRepository.deleteAllInBatch();
         siteRepository.deleteAllInBatch();
     }
-
 }

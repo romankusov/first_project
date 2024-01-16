@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import static jakarta.persistence.ConstraintMode.CONSTRAINT;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -16,8 +18,9 @@ public class PageEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
-    @JoinColumn(name = "site_id", nullable = false)
+    @ManyToOne//(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @JoinColumn(name = "site_id",foreignKey = @ForeignKey(value = CONSTRAINT,
+            foreignKeyDefinition = "FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE CASCADE ON UPDATE CASCADE"), nullable = false)
     private SiteEntity siteEntity;
 
     @Column(columnDefinition = "varchar(200) NOT NULL")
@@ -34,7 +37,6 @@ public class PageEntity {
         this.code = code;
         this.content = content;
     }
-
 
     public PageEntity(SiteEntity siteEntity, String path) {
         this.siteEntity = siteEntity;
