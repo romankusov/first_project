@@ -26,7 +26,7 @@ This GET request without parameters provides stop of indexation of sites
 GET request with 4 parameters: search query (required), site for search (not required, by default search is going on all sites in scope), offset for pagination (not reqiured, by default offset = 0), limit for search results (not required, by default limit = 20).
 Request provides search of Russian words under the query on pages saved to database
 ## Stack
-Java 17, Spring Boot 3.1.0, Hibernate, Swagger Api, Maven, Lombok, JSOUP, Slf4j, MySQL, Morphology Library, JUnit
+Java 17, Spring Boot 3.1.0, Hibernate, Maven, Lombok, JSOUP, Slf4j, MySQL, Morphology Library, JUnit
 
 
 
